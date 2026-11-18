@@ -66,9 +66,10 @@ class NetworkVmsTabProvider extends AbstractNetworkTabProvider {
 		'VMs'
 	}
 
+	// Only users whose roles grant the plugin's Infrastructure: Network VMs Tab permission see the tab.
 	@Override
 	Boolean show(Network network, User user, Account account) {
-		true
+		NetworkVmsTabPlugin.canView(user)
 	}
 
 	/** The placeholder drawn with the page. Its script loads the table when the tab is first shown. */
@@ -85,7 +86,9 @@ class NetworkVmsTabProvider extends AbstractNetworkTabProvider {
 		try {
 			Account account = user?.account
 			Network network = networkId != null ? morpheus.async.cloud.network.listById([networkId]).toList().blockingGet()[0] : null
-			if(account?.id == null) {
+			if(!NetworkVmsTabPlugin.canView(user)) {
+				data = [error: "Your role doesn't include the Infrastructure: Network VMs Tab permission."]
+			} else if(account?.id == null) {
 				data = [error: "Couldn't tell which tenant you're in, so no VMs are shown."]
 			} else if(network == null) {
 				data = [error: 'Network not found.']
@@ -128,7 +131,6 @@ class NetworkVmsTabProvider extends AbstractNetworkTabProvider {
 			[
 				id: vm.id,
 				name: vm.displayName ?: vm.name,
-				hostname: vm.hostname,
 				instances: instances[vm.id],
 				tenant: tenants[vm.account?.id],
 				powerState: vm.powerState?.toString(),

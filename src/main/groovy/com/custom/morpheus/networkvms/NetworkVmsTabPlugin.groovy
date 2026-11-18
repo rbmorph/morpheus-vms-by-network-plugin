@@ -2,6 +2,7 @@ package com.custom.morpheus.networkvms
 
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.model.Permission
+import com.morpheusdata.model.User
 import com.morpheusdata.views.HandlebarsRenderer
 import com.morpheusdata.web.PluginController
 
@@ -27,10 +28,23 @@ class NetworkVmsTabPlugin extends Plugin {
 		this.setRenderer(new HandlebarsRenderer('renderer', this.getClassLoader()))
 	}
 
-	/** Grants access to the tab's VM list. Admins give it to roles under Administration > Roles. */
+	/**
+	 * Controls who sees the VMs tab. Listed with the Infrastructure permissions on user and tenant
+	 * roles under Administration > Roles. None hides the tab; Read or Full shows it.
+	 */
 	@Override
 	List<Permission> getPermissions() {
-		[new Permission('Network VMs Tab', NetworkVmsController.PERMISSION_CODE, [Permission.AccessType.full])]
+		[Permission.build(PERMISSION_NAME, NetworkVmsController.PERMISSION_CODE, PERMISSION_CATEGORY,
+			[Permission.AccessType.none, Permission.AccessType.read, Permission.AccessType.full])]
+	}
+
+	static final String PERMISSION_NAME = 'Infrastructure: Network VMs Tab'
+	static final String PERMISSION_CATEGORY = 'infrastructure'
+
+	/** True when the user's roles grant the tab permission at Read or Full. */
+	static boolean canView(User user) {
+		String access = user?.permissions?.get(NetworkVmsController.PERMISSION_CODE)
+		access == Permission.AccessType.read.toString() || access == Permission.AccessType.full.toString()
 	}
 
 	@Override

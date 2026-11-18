@@ -47,9 +47,9 @@ class NetworkVmsController implements PluginController {
 		plugin
 	}
 
-	// Only the plugin's own permission, as in Morpheus's sample tab plugin. Referencing a built-in
-	// Morpheus permission here stopped the appliance from accepting the plugin. The VM list itself
-	// is still limited to the user's own tenant unless they're in the Master tenant.
+	// The plugin's own permission. Morpheus only checks that the user has it at some level, so
+	// renderVms() also checks for Read or Full. The VM list is still limited to the user's own
+	// tenant unless they're in the Master tenant.
 	@Override
 	List<Route> getRoutes() {
 		[Route.build(VMS_URL, 'vms', Permission.build(PERMISSION_CODE, 'full'))]

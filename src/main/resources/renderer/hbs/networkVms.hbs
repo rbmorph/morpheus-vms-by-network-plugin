@@ -8,7 +8,6 @@
 			<thead>
 				<tr>
 					<th>Name</th>
-					<th>Hostname</th>
 					<th>Instance</th>
 					{{#if showTenant}}<th>Tenant</th>{{/if}}
 					<th>Power</th>
@@ -25,7 +24,6 @@
 				{{#each vms}}
 					<tr>
 						<td><a href="/infrastructure/servers/{{id}}">{{name}}</a></td>
-						<td>{{hostname}}</td>
 						<td>{{#each instances}}<a href="/provisioning/instances/{{id}}">{{name}}</a>{{#unless @last}}, {{/unless}}{{/each}}</td>
 						{{#if ../showTenant}}<td>{{tenant}}</td>{{/if}}
 						<td>{{powerState}}</td>

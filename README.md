@@ -42,7 +42,7 @@ The VM list loads the first time you open the tab, not with the network page, so
 VMs doesn't slow the page down. The table stays loaded until you leave the page.
 
 A count of VMs on the network and how many are powered on, then one row per VM: name (linked to
-the VM), hostname, instance (linked), tenant, power state, status, the VM's IP and MAC addresses on
+the VM), instance (linked), tenant, power state, status, the VM's IP and MAC addresses on
 this network, the interface names, OS, cores and memory.
 
 A VM with several interfaces on the same network gets one row, with its addresses comma-separated.
@@ -52,9 +52,17 @@ A VM with several interfaces on the same network gets one row, with its addresse
 - **Master tenant users** see every tenant's VMs on the network, with a Tenant column.
 - **Everyone else** sees only their own tenant's VMs.
 
-The tab fetches its table from `/plugin/networkVmsTab/vms`. Users need the **Infrastructure:
-Network** role permission, at any level, to load it. For a role without that permission, grant the
-plugin's own **Network VMs Tab** permission instead.
+### Permission
+
+The plugin adds an **Infrastructure: Network VMs Tab** permission to roles under
+**Administration > Roles**, alongside the other Infrastructure permissions on user and tenant roles.
+
+- **None:** the tab is hidden.
+- **Read** or **Full:** the tab is shown.
+
+A new permission starts out ungranted, so after installing, set it on the roles that should see the
+tab, including your admin roles. A subtenant user's role can't grant more than their tenant role
+allows, so set it on the tenant role too.
 
 ## What to check on first run
 
@@ -63,9 +71,13 @@ Compare a few networks against the VMs you expect, covering each cloud type you 
 - **Tab stays on "Loading VMs…":** open the browser's developer console on the network page. A
   Content-Security-Policy error means Morpheus blocked the tab's script; report it with your
   Morpheus version.
-- **Tab says the server returned 403 or 404:** the user's role lacks **Infrastructure: Network**.
-  Grant the **Network VMs Tab** permission to that role. If it still fails, open
-  `/plugin/networkVmsTab/vms?networkId=<id>` directly while logged in to see the response.
+- **Tab doesn't appear:** the user's roles don't grant **Infrastructure: Network VMs Tab** at Read
+  or Full. Log out and back in after changing a role.
+- **Permission is under Uncategorized instead of Infrastructure:** the appliance didn't accept the
+  `infrastructure` category name. Check the `subCategory` of an existing Infrastructure permission
+  in `GET /api/roles/:id` and set `PERMISSION_CATEGORY` in `NetworkVmsTabPlugin.groovy` to match.
+- **Tab says the server returned 403 or 404:** open `/plugin/networkVmsTab/vms?networkId=<id>`
+  directly while logged in to see the response.
 - **Fewer VMs than expected:** check `morpheus-ui` logs for errors from `NetworkVmsTabProvider`,
   then compare with `GET /api/servers/:id` for a missing VM and look at its
   `interfaces[].network.id` and `computeServerType.guestVm`.
