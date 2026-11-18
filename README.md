@@ -38,6 +38,9 @@ point at a commit that includes `.github/workflows/build.yml`.
 
 ## What the tab shows
 
+The VM list loads the first time you open the tab, not with the network page, so a network with many
+VMs doesn't slow the page down. The table stays loaded until you leave the page.
+
 A count of VMs on the network and how many are powered on, then one row per VM: name (linked to
 the VM), hostname, instance (linked), tenant, power state, status, the VM's IP and MAC addresses on
 this network, the interface names, OS, cores and memory.
@@ -49,21 +52,25 @@ A VM with several interfaces on the same network gets one row, with its addresse
 - **Master tenant users** see every tenant's VMs on the network, with a Tenant column.
 - **Everyone else** sees only their own tenant's VMs.
 
-Morpheus doesn't tell the tab who is viewing it when it draws the tab, only when it asks whether to
-show it. The plugin remembers the viewer's tenant from that check. If that ever fails, the tab says
-it couldn't tell which tenant you're in and shows no VMs, rather than showing too much.
+The tab fetches its table from `/plugin/networkVmsTab/vms`. Users need the **Infrastructure:
+Network** role permission, at any level, to load it. For a role without that permission, grant the
+plugin's own **Network VMs Tab** permission instead.
 
 ## What to check on first run
 
 Compare a few networks against the VMs you expect, covering each cloud type you use.
 
-- **Tab says it couldn't tell which tenant you're in:** Morpheus drew the tab on a different
-  request from the visibility check. Report it with your Morpheus version.
+- **Tab stays on "Loading VMs…":** open the browser's developer console on the network page. A
+  Content-Security-Policy error means Morpheus blocked the tab's script; report it with your
+  Morpheus version.
+- **Tab says the server returned 403 or 404:** the user's role lacks **Infrastructure: Network**.
+  Grant the **Network VMs Tab** permission to that role. If it still fails, open
+  `/plugin/networkVmsTab/vms?networkId=<id>` directly while logged in to see the response.
 - **Fewer VMs than expected:** check `morpheus-ui` logs for errors from `NetworkVmsTabProvider`,
   then compare with `GET /api/servers/:id` for a missing VM and look at its
   `interfaces[].network.id` and `computeServerType.guestVm`.
-- **Tab is slow on large clouds:** the tab loads every server in the network's cloud to check its
-  interfaces, each time it's opened.
+- **Tab is slow to fill in on large clouds:** the page itself isn't held up, but the table loads
+  every server in the network's cloud to check its interfaces, each time the page is opened.
 
 ## Known limits
 

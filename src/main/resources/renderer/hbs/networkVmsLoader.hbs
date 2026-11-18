@@ -1,0 +1,59 @@
+<div id="network-vms-tab-{{networkId}}" data-url="{{url}}">
+	<p>Loading VMs…</p>
+</div>
+<script nonce="{{nonce}}">
+(function() {
+	var el = document.getElementById('network-vms-tab-{{networkId}}');
+	if(!el) {
+		return;
+	}
+	var loading = false;
+	var loaded = false;
+
+	function load() {
+		if(loading || loaded) {
+			return;
+		}
+		loading = true;
+		el.innerHTML = '<p>Loading VMs…</p>';
+		fetch(el.getAttribute('data-url'), {credentials: 'same-origin', headers: {'X-Requested-With': 'XMLHttpRequest'}})
+			.then(function(response) {
+				if(!response.ok) {
+					throw new Error('the server returned ' + response.status);
+				}
+				return response.text();
+			})
+			.then(function(html) {
+				loaded = true;
+				el.innerHTML = html;
+			})
+			.catch(function(error) {
+				el.innerHTML = '<p><strong>Couldn\'t load the VMs on this network (' + error.message + ').</strong> ' +
+					'<a href="#" data-network-vms-retry>Try again</a></p>';
+			})
+			.then(function() {
+				loading = false;
+			});
+	}
+
+	el.addEventListener('click', function(event) {
+		if(event.target && event.target.hasAttribute('data-network-vms-retry')) {
+			event.preventDefault();
+			load();
+		}
+	});
+
+	// Hidden tabs take up no space, so the placeholder only becomes visible when the VMs tab is opened.
+	if('IntersectionObserver' in window) {
+		var observer = new IntersectionObserver(function(entries) {
+			if(entries.some(function(entry) { return entry.isIntersecting; })) {
+				observer.disconnect();
+				load();
+			}
+		});
+		observer.observe(el);
+	} else {
+		load();
+	}
+})();
+</script>

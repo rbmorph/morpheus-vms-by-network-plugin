@@ -21,22 +21,21 @@ import java.sql.ResultSet
 /**
  * Adds a "VMs" tab to a network's detail page listing the virtual machines with an interface on it.
  *
+ * Morpheus draws every tab when the network page opens, so the tab itself is only a placeholder.
+ * Its script fetches the VM table from NetworkVmsController the first time the tab is shown, which
+ * keeps a slow VM lookup from holding up the page.
+ *
  * "Virtual machines" means what Infrastructure > Compute > Virtual Machines lists: servers whose
- * server type is a guest VM, leaving out hypervisor and Docker hosts.
+ * server type is a guest VM, leaving out hypervisor and Docker hosts. VMs are found by loading the
+ * servers in the network's cloud with their interfaces and keeping those with one on this network.
  *
- * VMs are found by loading the servers in the network's cloud with their interfaces and keeping
- * those with an interface on this network.
- *
- * Tenant scoping: renderTemplate() isn't told who is looking, so show() remembers the viewer's
- * tenant for the render that follows on the same request. Master tenant users see every tenant's
- * VMs; everyone else sees only their own tenant's. If the viewer is unknown, no VMs are shown.
+ * Tenant scoping: Master tenant users see every tenant's VMs; everyone else sees only their own.
  */
 @Slf4j
 class NetworkVmsTabProvider extends AbstractNetworkTabProvider {
 
 	private static final int BATCH_SIZE = 500
 	private static final BigDecimal BYTES_PER_GB = 1024G * 1024G * 1024G
-	private static final ThreadLocal<Map> VIEWER = new ThreadLocal<>()
 
 	Plugin plugin
 	MorpheusContext morpheusContext
@@ -69,24 +68,32 @@ class NetworkVmsTabProvider extends AbstractNetworkTabProvider {
 
 	@Override
 	Boolean show(Network network, User user, Account account) {
-		Account viewer = account ?: user?.account
-		if(viewer?.id == null) {
-			VIEWER.remove()
-		} else {
-			VIEWER.set([accountId: viewer.id, master: viewer.masterAccount == true])
-		}
 		true
 	}
 
+	/** The placeholder drawn with the page. Its script loads the table when the tab is first shown. */
 	@Override
 	HTMLResponse renderTemplate(Network network) {
-		Map viewer = VIEWER.get()
-		VIEWER.remove()
+		ViewModel<Map> model = new ViewModel<>()
+		model.object = [networkId: network.id, url: "/plugin${NetworkVmsController.VMS_URL}?networkId=${network.id}".toString()]
+		getRenderer().renderTemplate('hbs/networkVmsLoader', model)
+	}
+
+	/** The VM table, fetched by the tab through NetworkVmsController. */
+	HTMLResponse renderVms(Long networkId, User user) {
 		Map data
 		try {
-			data = viewer ? collect(network, viewer) : [error: "Couldn't tell which tenant you're in, so no VMs are shown."]
+			Account account = user?.account
+			Network network = networkId != null ? morpheus.async.cloud.network.listById([networkId]).toList().blockingGet()[0] : null
+			if(account?.id == null) {
+				data = [error: "Couldn't tell which tenant you're in, so no VMs are shown."]
+			} else if(network == null) {
+				data = [error: 'Network not found.']
+			} else {
+				data = collect(network, [accountId: account.id, master: account.masterAccount == true])
+			}
 		} catch(Exception e) {
-			log.error("Network VMs tab failed for network ${network?.id}: ${e.message}", e)
+			log.error("Network VMs tab failed for network ${networkId}: ${e.message}", e)
 			data = [error: "Couldn't load the VMs on this network: ${e.message}".toString()]
 		}
 		ViewModel<Map> model = new ViewModel<>()
