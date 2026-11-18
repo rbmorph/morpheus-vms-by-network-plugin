@@ -14,7 +14,7 @@ import com.morpheusdata.web.Route
  */
 class NetworkVmsController implements PluginController {
 
-	static final String PERMISSION_CODE = 'network-vms-tab'
+	static final String PERMISSION_CODE = 'networkVmsTab'
 	static final String VMS_URL = '/networkVmsTab/vms'
 
 	Plugin plugin
@@ -47,16 +47,12 @@ class NetworkVmsController implements PluginController {
 		plugin
 	}
 
-	// A user needs either of these, at any access level. The VM list itself is still limited to
-	// the user's own tenant unless they're in the Master tenant.
+	// Only the plugin's own permission, as in Morpheus's sample tab plugin. Referencing a built-in
+	// Morpheus permission here stopped the appliance from accepting the plugin. The VM list itself
+	// is still limited to the user's own tenant unless they're in the Master tenant.
 	@Override
 	List<Route> getRoutes() {
-		[
-			Route.build(VMS_URL, 'vms', [
-				new Permission('Infrastructure: Network', 'infrastructure-network', [Permission.AccessType.read, Permission.AccessType.full]),
-				new Permission('Network VMs Tab', PERMISSION_CODE, [Permission.AccessType.full])
-			])
-		]
+		[Route.build(VMS_URL, 'vms', Permission.build(PERMISSION_CODE, 'full'))]
 	}
 
 	def vms(ViewModel<Map> model) {

@@ -19,7 +19,7 @@ class NetworkVmsTabPlugin extends Plugin {
 		this.controllers.add(new NetworkVmsController(this, morpheus, tab))
 	}
 
-	/** Lets admins grant access to the tab's data to roles without the built-in Network permission. */
+	/** Grants access to the tab's VM list. Admins give it to roles under Administration > Roles. */
 	@Override
 	List<Permission> getPermissions() {
 		[new Permission('Network VMs Tab', NetworkVmsController.PERMISSION_CODE, [Permission.AccessType.full])]
