@@ -1,0 +1,37 @@
+plugins {
+    id 'groovy'
+}
+
+group = 'com.custom.morpheus'
+// Release builds pass -PpluginVersion from the git tag; this is the default for other builds.
+version = findProperty('pluginVersion') ?: '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Everything here is supplied by the Morpheus appliance at runtime, so nothing is bundled.
+dependencies {
+    compileOnly "com.morpheusdata:morpheus-plugin-api:${morphPluginApiVersion}"
+    compileOnly "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compileOnly 'io.reactivex.rxjava3:rxjava:3.1.8'
+    compileOnly 'org.slf4j:slf4j-api:1.7.26'
+}
+
+jar {
+    manifest {
+        attributes(
+            'Plugin-Class': 'com.custom.morpheus.networkvms.NetworkVmsTabPlugin',
+            'Plugin-Version': archiveVersion.get(),
+            'Morpheus-Name': 'Network VMs Tab',
+            'Morpheus-Code': 'network-vms-tab',
+            'Morpheus-Description': 'Adds a VMs tab to network details listing the virtual machines on that network',
+            'Morpheus-Min-Appliance-Version': '7.0.0'
+        )
+    }
+}

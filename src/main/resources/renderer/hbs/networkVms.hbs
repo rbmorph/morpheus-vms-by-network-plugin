@@ -1,0 +1,46 @@
+{{#if error}}
+	<p><strong>{{error}}</strong></p>
+{{else}}
+	{{#if notice}}<p><em>{{notice}}</em></p>{{/if}}
+	<p>{{vmCount}} VMs on this network, {{poweredOnCount}} powered on.</p>
+	{{#if vms}}
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Hostname</th>
+					<th>Instance</th>
+					{{#if showTenant}}<th>Tenant</th>{{/if}}
+					<th>Power</th>
+					<th>Status</th>
+					<th>IP addresses</th>
+					<th>MAC addresses</th>
+					<th>Interfaces</th>
+					<th>OS</th>
+					<th>Cores</th>
+					<th>Memory (GB)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each vms}}
+					<tr>
+						<td><a href="/infrastructure/servers/{{id}}">{{name}}</a></td>
+						<td>{{hostname}}</td>
+						<td>{{#each instances}}<a href="/provisioning/instances/{{id}}">{{name}}</a>{{#unless @last}}, {{/unless}}{{/each}}</td>
+						{{#if ../showTenant}}<td>{{tenant}}</td>{{/if}}
+						<td>{{powerState}}</td>
+						<td>{{status}}</td>
+						<td>{{ipAddresses}}</td>
+						<td>{{macAddresses}}</td>
+						<td>{{interfaces}}</td>
+						<td>{{os}}</td>
+						<td>{{cores}}</td>
+						<td>{{memoryGb}}</td>
+					</tr>
+				{{/each}}
+			</tbody>
+		</table>
+	{{else}}
+		<p>No virtual machines have an interface on this network.</p>
+	{{/if}}
+{{/if}}
