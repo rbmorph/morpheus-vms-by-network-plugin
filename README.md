@@ -14,7 +14,7 @@ Needs JDK 11 or newer. Internet access is required to download dependencies.
 
 The plugin is written to `build/libs/network-vms-tab-1.0.0.jar`.
 
-It is built against plugin API 1.1.6 and declares Morpheus 7.0.0 as its minimum. To target a
+It is built against plugin API 1.5.0, which is what the appliance asks for on upload. To target a
 newer appliance, change `morphPluginApiVersion` in `gradle.properties`.
 
 ## Automatic builds and releases
